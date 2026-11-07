@@ -50,7 +50,7 @@ export default async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const path = url.pathname.replace(/\/+$/, "") || "/";
 
-  if (path === "/") return homePage();
+  if (path === "/") return homePage(await getKv("bot_login"));
   if (path === "/health") return new Response("ok");
   if (path === "/privacy") return privacyPage();
   if (path === "/terms" || path === "/tos") return termsPage();

@@ -53,7 +53,7 @@ export function messagePage(title: string, text: string, status = 200) {
   return page(`<h1>${esc(title)}</h1><p>${text}</p><p><a href="${BASE_URL}/">Back home</a></p>`, { title, status });
 }
 
-export function homePage() {
+export function homePage(botLogin: string | null) {
   const lead = Math.round(HEADS_UP_MS / 1000);
   return page(`
 <div class="kicker">TAVERNWORKS</div>
@@ -73,7 +73,7 @@ export function homePage() {
 </div>
 <h2>For mods</h2>
 <p><code>!crier on</code> / <code>!crier off</code>, <code>!crier announce on</code> / <code>off</code>, and <code>!crier status</code>.
-For announcements, make the bot a mod: <code>/mod ${esc(BOT_NAME.replace(/\s+/g, ""))}</code>.</p>`);
+For announcements, make the bot a mod${botLogin ? `: <code>/mod ${esc(botLogin)}</code>` : ""}.</p>`);
 }
 
 export type Manageable = { ch: Channel; canRemove: boolean };
