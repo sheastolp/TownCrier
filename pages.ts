@@ -29,6 +29,8 @@ font:600 15px Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer}
 .pill.on{border-color:var(--green);color:var(--green)}
 .pill.off{border-color:var(--ember);color:var(--ember)}
 .pill.live{background:#e5484d;border-color:#e5484d;color:#fff}
+.card.warn{border-color:var(--ember)}
+.card.warn h3{color:var(--ember);margin-top:0}
 form{display:inline}
 ul{padding-left:20px}
 code{font-family:ui-monospace,Consolas,monospace;color:var(--gold2)}
@@ -76,6 +78,19 @@ export function homePage(botLogin: string | null) {
 For announcements, make the bot a mod${botLogin ? `: <code>/mod ${esc(botLogin)}</code>` : ""}.</p>`);
 }
 
+/** Without a bot account the bot has no one to speak as: no chat
+ * subscription, no !nextad, no ad notices. Said wherever someone would
+ * otherwise assume it's working. */
+export function botMissingCard(forOperator = false) {
+  return `<div class="card warn"><h3>⚠️ The bot account isn't connected yet</h3>
+<p>Until it is, ${BOT_NAME} can't join chat, answer <code>!nextad</code> or post ad alerts in any channel.</p>
+<p class="muted">${
+    forOperator
+      ? "Click <b>Connect the bot account</b> below and approve it on Twitch <i>as the bot account</i> (switch accounts there if it shows yours). Channels already added start working right away."
+      : "That's on the operator's side, not yours. Once it's connected, your channel starts working without adding the bot again."
+  }</p></div>`;
+}
+
 export type Manageable = { ch: Channel; canRemove: boolean };
 
 function channelCard(m: Manageable, action: string) {
@@ -101,11 +116,12 @@ ${!c.refresh_token ? `<p class="muted">The streamer needs to <a href="${BASE_URL
 </div>`;
 }
 
-export function myPage(login: string, list: Manageable[], ownInstalled: boolean, notice = "") {
+export function myPage(login: string, list: Manageable[], ownInstalled: boolean, notice = "", botConnected = true) {
   return page(`
 <div class="kicker">MANAGE</div><h1>📯 Your channels</h1>
 <p class="muted">Signed in as <b>${esc(login)}</b> · <a href="${BASE_URL}/auth/logout">Log out</a></p>
 ${notice ? `<div class="card">${notice}</div>` : ""}
+${botConnected || !list.length ? "" : botMissingCard()}
 ${ownInstalled ? "" : `<div class="card"><p>${BOT_NAME} isn't in your channel yet.</p>
 <p><a class="btn" href="${BASE_URL}/auth/start">Add ${BOT_NAME} to your channel</a></p></div>`}
 ${list.map((m) => channelCard(m, `${BASE_URL}/my/action`)).join("")}
@@ -127,6 +143,7 @@ export function dashboardPage(o: {
 <div class="kicker">OPERATOR</div><h1>📯 Dashboard</h1>
 <p class="muted">Signed in as <b>${esc(o.admin)}</b> · <a href="${BASE_URL}/auth/logout">Log out</a></p>
 ${o.notice ? `<div class="card">${o.notice}</div>` : ""}
+${o.botLogin ? "" : botMissingCard(true)}
 <div class="card">
 <p class="row"><span class="pill ${o.botLogin ? "on" : "off"}">Bot account: ${esc(o.botLogin ?? "not connected")}</span>
 <span class="pill ${o.announceToken ? "on" : "off"}">${o.announceToken ? "Can announce" : "No announcement token"}</span>

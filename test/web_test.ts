@@ -66,6 +66,19 @@ Deno.test("/my: on/off, announcements, remove; strangers refused", async () => {
   await db.setKv("modof:42", JSON.stringify({ at: Date.now(), ids: [] }));
   const page = await (await get("/my", me)).text();
   assert(page.includes("Streamer") && page.includes("Turn off"), page);
+  // No bot account yet: say so, rather than look like it's working.
+  assert(page.includes("bot account isn't connected"), page);
+
+  const admin = { Cookie: (await sessionCookie({ login: "stonedsheamus", id: "1" })).split(";")[0] };
+  const dash = await (await get("/dashboard", admin)).text();
+  assert(dash.includes("bot account isn't connected") && dash.includes("Connect the bot account"), dash);
+
+  await db.setKv("bot_user_id", "99");
+  await db.setKv("bot_login", "towncrier");
+  assert(!(await (await get("/my", me)).text()).includes("bot account isn't connected"));
+  assert(!(await (await get("/dashboard", admin)).text()).includes("bot account isn't connected"));
+  await db.setKv("bot_user_id", "");
+  await db.setKv("bot_login", "");
 
   const act = (action: string, headers: HeadersInit = me) =>
     handler(new Request(B + "/my/action", { method: "POST", headers, body: new URLSearchParams({ channel: "42", action }), redirect: "manual" }));

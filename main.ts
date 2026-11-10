@@ -30,7 +30,7 @@ import {
 import { exchangeCode, fetchLive, getUser, saveBotToken, subscribeChannel, unsubscribeChannel, verifyEventSub } from "./twitch.ts";
 import { forgetSchedule, onAdBreakBegin } from "./ads.ts";
 import { handleChat } from "./commands.ts";
-import { dashboardPage, esc, homePage, type Manageable, messagePage, myPage, page, privacyPage, termsPage } from "./pages.ts";
+import { botMissingCard, dashboardPage, esc, homePage, type Manageable, messagePage, myPage, page, privacyPage, termsPage } from "./pages.ts";
 
 const redirect = (to: string, headers: HeadersInit = {}) =>
   new Response(null, { status: 303, headers: { Location: to, ...headers } });
@@ -141,7 +141,9 @@ async function oauthCallback(req: Request, url: URL): Promise<Response> {
   // Signing in comes free with the invite.
   if (ADMIN_KEY) headers.append("Set-Cookie", await sessionCookie({ login: user.login, id: user.id }));
   const botLogin = await getKv("bot_login");
+  const botConnected = !!(await getKv("bot_user_id"));
   return page(`<h1>✅ ${BOT_NAME} is in ${esc(user.display_name)}'s channel</h1>
+${botConnected ? "" : botMissingCard()}
 <p>${adEvents ? "Ad break alerts are on." : "Ad alerts couldn't be switched on yet; the bot will keep trying."}
 It only speaks while you're live.</p>
 <p>For the highlighted announcement box, make it a mod: <code>/mod ${esc(botLogin ?? "towncrier")}</code>.
@@ -209,7 +211,13 @@ async function myRoute(req: Request, url: URL): Promise<Response> {
     saved: "Saved.",
   };
   const list = await manageable(user);
-  return myPage(user.login, list, list.some((m) => m.ch.broadcaster_id === user.id), notices[url.searchParams.get("done") ?? ""] ?? "");
+  return myPage(
+    user.login,
+    list,
+    list.some((m) => m.ch.broadcaster_id === user.id),
+    notices[url.searchParams.get("done") ?? ""] ?? "",
+    !!(await getKv("bot_user_id")),
+  );
 }
 
 async function myAction(req: Request): Promise<Response> {
