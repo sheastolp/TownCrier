@@ -30,8 +30,10 @@ export const SUPPORT_URL = Deno.env.get("SUPPORT_URL") ?? "https://tavernworks.d
 // in their chat (and read commands) without being a mod; channel:read:ads
 // lets it read their ad schedule and get ad-break events.
 export const INVITE_SCOPES = "channel:bot channel:read:ads";
-// What the bot account itself grants, once, at /auth/bot-setup.
-export const BOT_SCOPES = "user:bot user:read:chat moderator:manage:announcements";
+// What the bot account itself grants, once, at /auth/bot-setup. Twitch's
+// Send Chat Message needs user:write:chat as well as user:bot from the
+// sender, even when posting with the app token.
+export const BOT_SCOPES = "user:bot user:read:chat user:write:chat moderator:manage:announcements";
 // The login for /my and /dashboard: identity plus the channels you moderate.
 export const LOGIN_SCOPES = "user:read:moderated_channels";
 

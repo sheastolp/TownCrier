@@ -76,9 +76,15 @@ Deno.test("/my: on/off, announcements, remove; strangers refused", async () => {
   await db.setKv("bot_user_id", "99");
   await db.setKv("bot_login", "towncrier");
   assert(!(await (await get("/my", me)).text()).includes("bot account isn't connected"));
-  assert(!(await (await get("/dashboard", admin)).text()).includes("bot account isn't connected"));
+  const noWrite = await (await get("/dashboard", admin)).text();
+  assert(!noWrite.includes("bot account isn't connected"), noWrite);
+  // Connected without user:write:chat: Twitch refuses its messages.
+  assert(noWrite.includes("can't post in chat"), noWrite);
+  await db.setKv("bot_scope", "user:bot user:read:chat user:write:chat moderator:manage:announcements");
+  assert(!(await (await get("/dashboard", admin)).text()).includes("can't post in chat"));
   await db.setKv("bot_user_id", "");
   await db.setKv("bot_login", "");
+  await db.setKv("bot_scope", "");
 
   const act = (action: string, headers: HeadersInit = me) =>
     handler(new Request(B + "/my/action", { method: "POST", headers, body: new URLSearchParams({ channel: "42", action }), redirect: "manual" }));

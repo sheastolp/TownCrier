@@ -109,6 +109,7 @@ async function oauthCallback(req: Request, url: URL): Promise<Response> {
     if (!isAdmin(await sessionUser(req))) return messagePage("Operators only", "Only the operator can connect the bot account.", 403);
     await setKv("bot_user_id", user.id);
     await setKv("bot_login", user.login);
+    await setKv("bot_scope", (token.scope ?? []).join(" "));
     if ((token.scope ?? []).includes("moderator:manage:announcements")) await saveBotToken(token);
     // Now that there's a bot id, every channel can get its chat subscription.
     for (const ch of await listChannels()) await subscribeChannel(ch.broadcaster_id).catch(console.error);
@@ -256,6 +257,7 @@ async function dashboardRoute(req: Request, url: URL): Promise<Response> {
   return dashboardPage({
     admin: user.login,
     botLogin: await getKv("bot_login"),
+    botCanChat: ((await getKv("bot_scope")) ?? "").split(/\s+/).includes("user:write:chat"),
     botOn: (await getKv("bot_enabled")) !== "0",
     announceToken: !!JSON.parse((await getKv("bot_token")) || "null")?.refresh_token,
     channels: await listChannels(),

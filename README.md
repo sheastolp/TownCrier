@@ -40,7 +40,7 @@ Lines are tavern-flavoured, spooky in October (`messages.ts`).
 - **One-time setup:** create a Twitch app with redirect
   `https://crier.tavernworks.dev/auth/callback`, fill in `.env`, start it,
   log in to Twitch in your browser *as the bot account*, open `/dashboard`
-  and click *Connect the bot account* (grants `user:bot user:read:chat
+  and click *Connect the bot account* (grants `user:bot user:read:chat user:write:chat
   moderator:manage:announcements`). Then add channels from the home page.
 
 ## How it runs

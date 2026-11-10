@@ -131,6 +131,7 @@ ${list.length ? "" : '<p class="muted">No channels to manage. Mods: the list com
 export function dashboardPage(o: {
   admin: string;
   botLogin: string | null;
+  botCanChat?: boolean;
   botOn: boolean;
   announceToken: boolean;
   channels: Channel[];
@@ -144,6 +145,9 @@ export function dashboardPage(o: {
 <p class="muted">Signed in as <b>${esc(o.admin)}</b> · <a href="${BASE_URL}/auth/logout">Log out</a></p>
 ${o.notice ? `<div class="card">${o.notice}</div>` : ""}
 ${o.botLogin ? "" : botMissingCard(true)}
+${o.botLogin && !o.botCanChat ? `<div class="card warn"><h3>⚠️ The bot account can't post in chat</h3>
+<p>It was connected without permission to send chat messages, so Twitch refuses its replies and ad notices.</p>
+<p class="muted">Click <b>Reconnect the bot account</b> below and approve it on Twitch as <b>${esc(o.botLogin)}</b>.</p></div>` : ""}
 <div class="card">
 <p class="row"><span class="pill ${o.botLogin ? "on" : "off"}">Bot account: ${esc(o.botLogin ?? "not connected")}</span>
 <span class="pill ${o.announceToken ? "on" : "off"}">${o.announceToken ? "Can announce" : "No announcement token"}</span>
