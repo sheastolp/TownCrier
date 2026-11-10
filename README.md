@@ -16,6 +16,15 @@ GuildScribe (`dnd-twitch-bot/adalerts.ts`) and UndercoverBurn (`ads.ts`).
 
 Lines are tavern-flavoured, spooky in October (`messages.ts`).
 
+**Its personality comes from the Grand Orrery** (`orrery.ts`), like the
+other bots': who the Crier is — its name, its role and its one line — is
+its record in the Orrery's character roster, read from the Orrery's
+database with the Orrery's own client. `BOT_NAME` in `config.ts` is only
+the fallback before the first good read. The record waits on the Orrery's
+review page until it's published, so until then the bot runs on the
+fallback, unchanged. Settings: `ORRERY=off`, `ORRERY_BRANCH`,
+`ORRERY_REFRESH_MIN` (30), `ORRERY_BOT_PERSON` (`the-town-crier`).
+
 ## For streamers and mods
 
 - **Add it:** https://crier.tavernworks.dev → *Add Town Crier to your
@@ -77,3 +86,4 @@ deno task test    # engine against a fake clock and Twitch, plus the web side
 | `auth.ts` | sign-in, mods, OAuth state |
 | `db.ts`, `local_sqlite.ts` | storage |
 | `messages.ts`, `pages.ts`, `config.ts` | words, HTML, settings |
+| `orrery.ts` | the bot's personality, read from the Grand Orrery |

@@ -1,6 +1,7 @@
 // The web side: OAuth, the EventSub webhook, and the management pages.
 
-import { ADMIN_KEY, BASE_URL, BOT_NAME, BOT_SCOPES, INVITE_SCOPES, LOGIN_SCOPES, REDIRECT_URI } from "./config.ts";
+import { ADMIN_KEY, BASE_URL, BOT_SCOPES, INVITE_SCOPES, LOGIN_SCOPES, REDIRECT_URI } from "./config.ts";
+import { crierName } from "./orrery.ts";
 import {
   type Channel,
   deleteChannel,
@@ -113,7 +114,7 @@ async function oauthCallback(req: Request, url: URL): Promise<Response> {
     if ((token.scope ?? []).includes("moderator:manage:announcements")) await saveBotToken(token);
     // Now that there's a bot id, every channel can get its chat subscription.
     for (const ch of await listChannels()) await subscribeChannel(ch.broadcaster_id).catch(console.error);
-    return page(`<h1>✅ Bot account connected</h1><p><b>${esc(user.display_name)}</b> now speaks as ${BOT_NAME}.</p>
+    return page(`<h1>✅ Bot account connected</h1><p><b>${esc(user.display_name)}</b> now speaks as ${crierName()}.</p>
 <p><a href="${BASE_URL}/dashboard">Back to the dashboard</a></p>`, { headers });
   }
 
@@ -143,7 +144,7 @@ async function oauthCallback(req: Request, url: URL): Promise<Response> {
   if (ADMIN_KEY) headers.append("Set-Cookie", await sessionCookie({ login: user.login, id: user.id }));
   const botLogin = await getKv("bot_login");
   const botConnected = !!(await getKv("bot_user_id"));
-  return page(`<h1>✅ ${BOT_NAME} is in ${esc(user.display_name)}'s channel</h1>
+  return page(`<h1>✅ ${crierName()} is in ${esc(user.display_name)}'s channel</h1>
 ${botConnected ? "" : botMissingCard()}
 <p>${adEvents ? "Ad break alerts are on." : "Ad alerts couldn't be switched on yet; the bot will keep trying."}
 It only speaks while you're live.</p>
@@ -208,7 +209,7 @@ async function myRoute(req: Request, url: URL): Promise<Response> {
   // A mod's list is good for a day; refresh it with a (silent) login.
   if (!isAdmin(user) && (await moderatedChannels(user.id)) === null) return redirect(`${BASE_URL}/auth/login?next=/my`);
   const notices: Record<string, string> = {
-    removed: `${BOT_NAME} was removed and its data for that channel deleted.`,
+    removed: `${crierName()} was removed and its data for that channel deleted.`,
     saved: "Saved.",
   };
   const list = await manageable(user);

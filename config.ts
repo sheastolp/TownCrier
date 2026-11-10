@@ -2,6 +2,9 @@
 // (/etc/tavernworks/towncrier.env on the Yoga laptop; see .env.example).
 // The timing knobs below are plain constants: change them here.
 
+// The fallback name. The name the bot actually goes by — and the rest of
+// its personality — comes from its record in the Grand Orrery (orrery.ts);
+// this is only for before the first good read, or ORRERY=off.
 export const BOT_NAME = "Town Crier";
 
 export const CLIENT_ID = Deno.env.get("TWITCH_CLIENT_ID") ?? "";

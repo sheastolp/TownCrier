@@ -1,6 +1,7 @@
 // The web pages: home, /my, /dashboard, privacy and terms.
 
-import { BASE_URL, BOT_NAME, HEADS_UP_MS, SUPPORT_URL } from "./config.ts";
+import { BASE_URL, HEADS_UP_MS, SUPPORT_URL } from "./config.ts";
+import { crierName, orreryBotPerson } from "./orrery.ts";
 import type { Channel } from "./db.ts";
 
 export function esc(s: unknown): string {
@@ -40,10 +41,10 @@ footer{margin-top:48px;font-size:14px;color:var(--muted)}
 export function page(body: string, opts: { title?: string; status?: number; headers?: HeadersInit } = {}) {
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(opts.title ?? BOT_NAME)}</title>
+<title>${esc(opts.title ?? crierName())}</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📯</text></svg>">
 <style>${STYLE}</style></head><body><main>${body}
-<footer><a href="${BASE_URL}/">${BOT_NAME}</a> · <a href="${BASE_URL}/my">Manage</a> ·
+<footer><a href="${BASE_URL}/">${crierName()}</a> · <a href="${BASE_URL}/my">Manage</a> ·
 <a href="${BASE_URL}/privacy">Privacy</a> · <a href="${BASE_URL}/terms">Terms</a> ·
 part of <a href="https://tavernworks.dev/">Tavernworks</a></footer></main></body></html>`;
   const headers = new Headers(opts.headers);
@@ -59,8 +60,8 @@ export function homePage(botLogin: string | null) {
   const lead = Math.round(HEADS_UP_MS / 1000);
   return page(`
 <div class="kicker">TAVERNWORKS</div>
-<h1>📯 ${BOT_NAME}</h1>
-<p class="muted">A Twitch chat bot that does one thing: ad breaks. Hear ye, hear ye.</p>
+<h1>📯 ${crierName()}</h1>
+<p class="muted">A Twitch chat bot that does one thing: ad breaks. Hear ye, hear ye.</p>${orreryBotPerson()?.line ? `\n<p>${esc(orreryBotPerson()!.line)}</p>` : ""}
 <div class="card">
 <ul>
 <li><b>Heads-up</b> about ${lead} seconds before a scheduled ad, with how long it runs and how many snoozes you have left.</li>
@@ -70,7 +71,7 @@ export function homePage(botLogin: string | null) {
 <li><code>!nextad</code> for anyone who wants to know when the next one is.</li>
 </ul>
 <p class="muted">Posts as a highlighted announcement when it's a mod in your channel, plain chat otherwise (your choice). Only talks while you're live. Doesn't save your chat.</p>
-<p class="row"><a class="btn" href="${BASE_URL}/auth/start">Add ${BOT_NAME} to your channel</a>
+<p class="row"><a class="btn" href="${BASE_URL}/auth/start">Add ${crierName()} to your channel</a>
 <a class="btn ghost" href="${BASE_URL}/my">Manage your channel</a></p>
 </div>
 <h2>For mods</h2>
@@ -83,7 +84,7 @@ For announcements, make the bot a mod${botLogin ? `: <code>/mod ${esc(botLogin)}
  * otherwise assume it's working. */
 export function botMissingCard(forOperator = false) {
   return `<div class="card warn"><h3>⚠️ The bot account isn't connected yet</h3>
-<p>Until it is, ${BOT_NAME} can't join chat, answer <code>!nextad</code> or post ad alerts in any channel.</p>
+<p>Until it is, ${crierName()} can't join chat, answer <code>!nextad</code> or post ad alerts in any channel.</p>
 <p class="muted">${
     forOperator
       ? "Click <b>Connect the bot account</b> below and approve it on Twitch <i>as the bot account</i> (switch accounts there if it shows yours). Channels already added start working right away."
@@ -110,7 +111,7 @@ function channelCard(m: Manageable, action: string) {
 <p class="row">
 ${c.enabled ? btn("off", "Turn off") : btn("on", "Turn on", "gold")}
 ${c.announce ? btn("announce_off", "Use plain chat") : btn("announce_on", "Use announcements")}
-${m.canRemove ? btn("remove", "Remove from channel", "danger", `Remove ${BOT_NAME} from ${c.login} and delete its data?`) : ""}
+${m.canRemove ? btn("remove", "Remove from channel", "danger", `Remove ${crierName()} from ${c.login} and delete its data?`) : ""}
 </p>
 ${!c.refresh_token ? `<p class="muted">The streamer needs to <a href="${BASE_URL}/auth/start">add the bot again</a> so it can read the ad schedule.</p>` : ""}
 </div>`;
@@ -122,10 +123,10 @@ export function myPage(login: string, list: Manageable[], ownInstalled: boolean,
 <p class="muted">Signed in as <b>${esc(login)}</b> · <a href="${BASE_URL}/auth/logout">Log out</a></p>
 ${notice ? `<div class="card">${notice}</div>` : ""}
 ${botConnected || !list.length ? "" : botMissingCard()}
-${ownInstalled ? "" : `<div class="card"><p>${BOT_NAME} isn't in your channel yet.</p>
-<p><a class="btn" href="${BASE_URL}/auth/start">Add ${BOT_NAME} to your channel</a></p></div>`}
+${ownInstalled ? "" : `<div class="card"><p>${crierName()} isn't in your channel yet.</p>
+<p><a class="btn" href="${BASE_URL}/auth/start">Add ${crierName()} to your channel</a></p></div>`}
 ${list.map((m) => channelCard(m, `${BASE_URL}/my/action`)).join("")}
-${list.length ? "" : '<p class="muted">No channels to manage. Mods: the list comes from Twitch, so channels you were just made a mod in show up after you log in again.</p>'}`, { title: `Manage ${BOT_NAME}` });
+${list.length ? "" : '<p class="muted">No channels to manage. Mods: the list comes from Twitch, so channels you were just made a mod in show up after you log in again.</p>'}`, { title: `Manage ${crierName()}` });
 }
 
 export function dashboardPage(o: {
@@ -158,12 +159,12 @@ ${o.botOn ? act("bot_off", "Pause everywhere") : act("bot_on", "Resume everywher
 ${act("resync", "Re-subscribe all channels")}</p>
 <p class="muted">Connect the bot while logged in to Twitch <i>as the bot account</i>.</p>
 </div>
-${o.channels.map((c) => channelCard({ ch: c, canRemove: true }, `${BASE_URL}/my/action`)).join("")}`, { title: `${BOT_NAME} dashboard` });
+${o.channels.map((c) => channelCard({ ch: c, canRemove: true }, `${BASE_URL}/my/action`)).join("")}`, { title: `${crierName()} dashboard` });
 }
 
 export function privacyPage() {
   return page(`<h1>Privacy</h1>
-<p>${BOT_NAME} stores, for each channel it's added to: the channel's Twitch id and name, the Twitch token the streamer
+<p>${crierName()} stores, for each channel it's added to: the channel's Twitch id and name, the Twitch token the streamer
 granted (to read the ad schedule), whether the bot is switched on there, and the time of the last ad break.</p>
 <p>It reads chat only to answer its own commands (<code>!nextad</code>, <code>!ads</code>, <code>!crier</code>). Chat messages
 are never saved. When you log in to manage a channel, it saves your Twitch id and the list of channels you moderate, for a day.</p>
@@ -174,7 +175,7 @@ cancels its Twitch subscriptions. You can also disconnect it at Twitch → Setti
 
 export function termsPage() {
   return page(`<h1>Terms</h1>
-<p>${BOT_NAME} is a free hobby project, provided as is, with no guarantee that every ad break gets called out on time.
+<p>${crierName()} is a free hobby project, provided as is, with no guarantee that every ad break gets called out on time.
 Twitch's ad schedule can change without notice. Don't rely on it for anything that matters.</p>
 <p>You can remove it whenever you like. It may be changed or shut down at any time.</p>
 <p>Contact: <a href="${esc(SUPPORT_URL)}">${esc(SUPPORT_URL)}</a></p>`, { title: "Terms" });

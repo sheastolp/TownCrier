@@ -7,7 +7,8 @@
 //   !crier announce on | off     announcement box or plain chat (same)
 //   !crier status                what it's set to here (same)
 
-import { BASE_URL, BOT_NAME, COMMAND_COOLDOWN_MS } from "./config.ts";
+import { BASE_URL, COMMAND_COOLDOWN_MS } from "./config.ts";
+import { crierName, orreryBotPerson } from "./orrery.ts";
 import { getChannel, getKv, setChannelAnnounce, setChannelEnabled } from "./db.ts";
 import { nextAdText } from "./ads.ts";
 import { postToChat } from "./twitch.ts";
@@ -34,7 +35,7 @@ export async function handleChat(event: any) {
     const [sub, val] = args;
     if (sub === "on" || sub === "off") {
       await setChannelEnabled(id, sub === "on");
-      return reply(sub === "on" ? `📯 ${BOT_NAME} is on: I'll call out ad breaks here.` : `📯 ${BOT_NAME} is off here. !crier on brings me back.`);
+      return reply(sub === "on" ? `📯 ${crierName()} is on: I'll call out ad breaks here.` : `📯 ${crierName()} is off here. !crier on brings me back.`);
     }
     if (sub === "announce" && (val === "on" || val === "off")) {
       await setChannelAnnounce(id, val === "on");
@@ -42,7 +43,7 @@ export async function handleChat(event: any) {
     }
     if (sub === "status") {
       return reply(
-        `📯 ${BOT_NAME} is ${ch.enabled ? "on" : "off"} here; notices as ${ch.announce ? "announcements" : "plain chat"}; ` +
+        `📯 ${crierName()} is ${ch.enabled ? "on" : "off"} here; notices as ${ch.announce ? "announcements" : "plain chat"}; ` +
           `ad schedule ${ch.refresh_token ? "connected" : "not connected (re-add the bot)"}. Manage: ${BASE_URL}/my`,
       );
     }
@@ -53,7 +54,8 @@ export async function handleChat(event: any) {
   if (now - (lastAnswer.get(id) ?? 0) < COMMAND_COOLDOWN_MS) return;
   lastAnswer.set(id, now);
   if (cmd === "!crier") {
-    return reply(`📯 I'm ${BOT_NAME}: I warn chat before ad breaks, call them out, and welcome you back. Try !nextad. ${BASE_URL}`);
+    const me = orreryBotPerson();
+    return reply(`📯 I'm ${crierName()}: I warn chat before ad breaks, call them out, and welcome you back.${me?.line ? ` ${me.line}` : ""} Try !nextad. ${BASE_URL}`);
   }
   await reply(await nextAdText(ch));
 }

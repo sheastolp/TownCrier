@@ -11,6 +11,7 @@ import handler from "./main.ts";
 import { BASE_URL, CLIENT_ID, EVENTSUB_SECRET, LIVE_SYNC_MS, TICK_MS } from "./config.ts";
 import { ensureTables, listChannels, setLive } from "./db.ts";
 import { forgetSchedule, tick } from "./ads.ts";
+import { ensureOrrery, refreshOrrery } from "./orrery.ts";
 import { fetchLive } from "./twitch.ts";
 
 const PORT = Number(Deno.env.get("PORT") || 8804);
@@ -49,7 +50,11 @@ async function syncLive() {
 }
 
 await ensureTables();
+// The bot's personality comes from the Grand Orrery (orrery.ts): read it
+// before the first page or reply, and keep the copy fresh on a timer.
+await ensureOrrery();
 if (!CLIENT_ID || !EVENTSUB_SECRET) console.warn("TWITCH_CLIENT_ID / EVENTSUB_SECRET not set: see .env.example");
+every("orrery", 60_000, 30_000, refreshOrrery);
 every("live sync", LIVE_SYNC_MS, 3_000, syncLive);
 every("ad tick", TICK_MS, 8_000, tick);
 

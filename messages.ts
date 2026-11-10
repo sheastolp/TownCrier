@@ -1,4 +1,6 @@
 // What Town Crier says. One line is picked at random.
+// These are a crier's stock calls; who the crier is — its name and
+// personality — comes from its record in the Grand Orrery (orrery.ts).
 // {length}: how long the ads run ("90s", "3 min").
 // {time}:   how long until they start ("60 seconds").
 // {delay}:  how far a snooze pushed them back ("5 min").
