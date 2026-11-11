@@ -40,6 +40,7 @@ const REFRESH_MS = Math.max(1, Number(Deno.env.get("ORRERY_REFRESH_MIN") ?? "30"
 // After a failed read, try again sooner than a full refresh.
 const RETRY_MS = 2 * 60_000;
 const REPO = Deno.env.get("ORRERY_REPO") || "sheastolp/grand-orrery";
+const BASE_URL = Deno.env.get("ORRERY_BASE_URL") || "https://sheamus-tuf-gaming-fx705dt-fx705dt.tail2c8da4.ts.net:8443";  // the laptop host that serves the database; the client falls back to GitHub when it can't be reached
 const GH_TOKEN = Deno.env.get(["ORRERY", "GITHUB", "TOKEN"].join("_")) || "";
 const FETCH_TIMEOUT_MS = 8_000;
 // Who Town Crier itself is in the Orrery (a person's id there).
@@ -47,7 +48,7 @@ const BOT_PERSON = Deno.env.get("ORRERY_BOT_PERSON") || "the-town-crier";
 // The Orrery's client, pinned to a commit of grand-orrery (the same pin
 // GuildScribe uses). Loaded lazily inside load(), so importing this module
 // — in the tests, above all — never touches the network.
-const CLIENT_URL = "https://cdn.jsdelivr.net/gh/sheastolp/grand-orrery@d91122f2f80a0f98644f9c473142be268c9a9530/client/orrery.js";
+const CLIENT_URL = "https://cdn.jsdelivr.net/gh/sheastolp/grand-orrery@45c7741a590b29ba77f657881db19fea4553e5b6/client/orrery.js";
 
 /** One record from the Orrery's database (entities.public.json): the fields
  * this bot uses. See grand-orrery's README, "The database". */
@@ -122,7 +123,7 @@ async function load(): Promise<void> {
     // The Orrery's own client, loaded on the first read.
     const { Orrery, fileCache } = await import(CLIENT_URL);
     const cachePath = cacheFile();
-    db = new Orrery({ repo: REPO, branch: BRANCH, refreshMinutes: 0, githubToken: GH_TOKEN || null, fetch: timedFetch, cache: cachePath ? fileCache(cachePath) : null });
+    db = new Orrery({ baseUrl: BASE_URL, repo: REPO, branch: BRANCH, refreshMinutes: 0, githubToken: GH_TOKEN || null, fetch: timedFetch, cache: cachePath ? fileCache(cachePath) : null });
     await db.ready();
   } else {
     await db.refresh();
