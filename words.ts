@@ -252,6 +252,7 @@ async function grabSourceScreenshot(url: string): Promise<Uint8Array<ArrayBuffer
         try {
           return await tryRun(bin, [headless, "--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage",
             "--hide-scrollbars", "--window-size=1920,1080", "--virtual-time-budget=10000",
+            "--use-angle=swiftshader", "--enable-unsafe-swiftshader",
             "--timeout=25000", `--screenshot=${path}`, url]);
         } catch (e) { lastErr = e; }
       }
