@@ -92,7 +92,7 @@ export function botMissingCard(forOperator = false) {
   }</p></div>`;
 }
 
-export type Manageable = { ch: Channel; canRemove: boolean; wordsOn?: boolean };
+export type Manageable = { ch: Channel; canRemove: boolean };
 
 function channelCard(m: Manageable, action: string) {
   const c = m.ch;
@@ -107,13 +107,11 @@ function channelCard(m: Manageable, action: string) {
 <span class="pill ${c.announce ? "on" : ""}">${c.announce ? "Announcements" : "Plain chat"}</span>
 <span class="pill ${c.refresh_token ? "on" : "off"}">${c.refresh_token ? "Ad schedule connected" : "Ad schedule not connected"}</span>
 <span class="pill ${c.ads_subscribed ? "on" : "off"}">${c.ads_subscribed ? "Ad events on" : "Ad events missing"}</span>
-${m.wordsOn !== undefined ? `<span class="pill ${m.wordsOn ? "on" : ""}">Helper ${m.wordsOn ? "on" : "off"}</span>` : ""}
 </p>
 <p class="row">
 ${c.enabled ? btn("off", "Turn off") : btn("on", "Turn on", "gold")}
 ${c.announce ? btn("announce_off", "Use plain chat") : btn("announce_on", "Use announcements")}
 ${m.canRemove ? btn("remove", "Remove from channel", "danger", `Remove ${crierName()} from ${c.login} and delete its data?`) : ""}
-${m.wordsOn !== undefined ? (m.wordsOn ? btn("words_off", "Helper off") : btn("words_on", "Helper on")) : ""}
 </p>
 ${!c.refresh_token ? `<p class="muted">The streamer needs to <a href="${BASE_URL}/auth/start">add the bot again</a> so it can read the ad schedule.</p>` : ""}
 </div>`;
@@ -138,8 +136,6 @@ export function dashboardPage(o: {
   botOn: boolean;
   announceToken: boolean;
   channels: Channel[];
-  wordsStates?: Record<string, boolean>;
-  wordsLink?: string;
   notice?: string;
 }) {
   const live = o.channels.filter((c) => c.is_live).length;
@@ -163,10 +159,7 @@ ${o.botOn ? act("bot_off", "Pause everywhere") : act("bot_on", "Resume everywher
 ${act("resync", "Re-subscribe all channels")}</p>
 <p class="muted">Connect the bot while logged in to Twitch <i>as the bot account</i>.</p>
 </div>
-${o.wordsLink ? `<div class="card"><h3>🔒 Private</h3>
-<p><a class="btn gold" href="${esc(o.wordsLink)}">Open the private page</a></p>
-<p class="muted">Switched on per channel below.</p></div>` : ""}
-${o.channels.map((c) => channelCard({ ch: c, canRemove: true, wordsOn: o.wordsStates?.[c.broadcaster_id] }, `${BASE_URL}/my/action`)).join("")}`, { title: `${crierName()} dashboard` });
+${o.channels.map((c) => channelCard({ ch: c, canRemove: true }, `${BASE_URL}/my/action`)).join("")}`, { title: `${crierName()} dashboard` });
 }
 
 export function privacyPage() {

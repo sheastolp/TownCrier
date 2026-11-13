@@ -67,9 +67,5 @@ export const SUBSCRIBE_RETRY_MS = 30 * 60_000;
 export const LIVE_SYNC_MS = 5 * 60_000;
 // !nextad answers at most once per this, per channel.
 export const COMMAND_COOLDOWN_MS = 20_000;
-// The private helper (words.ts) looks at the watched channel's
-// stream this often. It never posts in chat. WORDS=off disables it.
-export const WORDS_GRAB_MS = 12_000;
-export const WORDS_OFF = (Deno.env.get("WORDS") ?? "").toLowerCase() === "off";
 // The heads-up goes out this long before a scheduled ad.
 export const HEADS_UP_MS = 60_000;

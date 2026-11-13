@@ -32,7 +32,6 @@ import { exchangeCode, fetchLive, getUser, saveBotToken, subscribeChannel, unsub
 import { forgetSchedule, onAdBreakBegin } from "./ads.ts";
 import { handleChat } from "./commands.ts";
 import { botMissingCard, dashboardPage, esc, homePage, type Manageable, messagePage, myPage, page, privacyPage, termsPage } from "./pages.ts";
-import { getWordsToken, wordsRoute, wordsUrl } from "./words.ts";
 
 const redirect = (to: string, headers: HeadersInit = {}) =>
   new Response(null, { status: 303, headers: { Location: to, ...headers } });
@@ -69,12 +68,6 @@ export default async function handler(req: Request): Promise<Response> {
 
   // ---- EventSub ----
   if (path === "/eventsub/callback" && req.method === "POST") return await eventSub(req);
-
-  // ---- Private page (operator only; never posts) ----
-  if (path.startsWith("/w/")) {
-    const r = await wordsRoute(req, url, path);
-    if (r) return r;
-  }
 
   // ---- Management ----
   if (path === "/my") return await myRoute(req, url);
@@ -240,13 +233,6 @@ async function myAction(req: Request): Promise<Response> {
   const back = (req.headers.get("Referer") ?? "").includes("/dashboard") ? "/dashboard" : "/my";
   if (action === "on" || action === "off") await setChannelEnabled(id, action === "on");
   else if (action === "announce_on" || action === "announce_off") await setChannelAnnounce(id, action === "announce_on");
-  else if (action === "words_on" || action === "words_off") {
-    // The operator's quiet helper: only they can switch it, so it
-    // never appears as an option on a streamer's own page.
-    if (!isAdmin(user)) return messagePage("Not allowed", "Only the operator can switch the helper.", 403);
-    if (action === "words_on") await setKv("words_channel", id);
-    else if ((await getKv("words_channel")) === id) await setKv("words_channel", "");
-  }
   else if (action === "remove") {
     if (!(user!.id === id || isAdmin(user))) return messagePage("Not allowed", "Only the streamer can remove the bot.", 403);
     await removeChannel(ch);
@@ -270,9 +256,6 @@ async function dashboardRoute(req: Request, url: URL): Promise<Response> {
   if (!isAdmin(user)) return messagePage("Operators only", `Streamers can manage their channel at <a href="${BASE_URL}/my">/my</a>.`, 403);
   const done = url.searchParams.get("done");
   const channels = await listChannels();
-  const watchedChannel = await getKv("words_channel");
-  const wordsStates: Record<string, boolean> = {};
-  for (const ch of channels) wordsStates[ch.broadcaster_id] = ch.broadcaster_id === watchedChannel;
   return dashboardPage({
     admin: user.login,
     botLogin: await getKv("bot_login"),
@@ -280,8 +263,6 @@ async function dashboardRoute(req: Request, url: URL): Promise<Response> {
     botOn: (await getKv("bot_enabled")) !== "0",
     announceToken: !!JSON.parse((await getKv("bot_token")) || "null")?.refresh_token,
     channels,
-    wordsStates,
-    wordsLink: wordsUrl(await getWordsToken()),
     notice: done === "removed" ? "Channel removed." : done ? "Done." : "",
   });
 }
