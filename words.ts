@@ -1,30 +1,22 @@
-// Words on Stream helper: quietly reads the letters on a stream's
-// screen and works out the best words they can make.
+// A quiet extra for the operator alone. It reads a row of letters
+// off a channel's stream picture and works out what they can spell,
+// best first. It never posts in chat (nothing in this module can
+// send a chat message), and what it finds lives only on a private,
+// unlisted page whose URL carries a long random token: the token is
+// kept in the database and shown only on the operator dashboard.
+// The word list is the public-domain ENABLE list: ordinary English,
+// no proper nouns. A word's score is the sum of its letters' values
+// (the table below).
 //
-// Shea asked for this on 2026-11-13, with three hard rules:
-//   - it NEVER posts in chat (nothing here can send a chat message;
-//     this module doesn't import the chat code at all),
-//   - the answers live on a private page only the operator can open
-//     (a long random token in the URL, shown on the dashboard),
-//   - the words are ordinary English, no proper nouns (the word list
-//     is the public-domain ENABLE list, which has none).
-//
-// How it works: for the one channel the operator picks (on this
-// page itself, or with the dashboard's per-channel "Word helper"), a
-// timer grabs one frame of the stream with streamlink + ffmpeg (the same tools UndercoverBurn
-// hears with), reads the big letter tiles with tesseract, and solves
-// the anagram against words.txt. The host service needs permission
-// to run those three programs (bot-host/setup.sh grants it) and
-// tesseract installed; when either is missing the private page says
-// so instead of failing silently.
-//
-// Words on Stream scores a word as the sum of its letters' values,
-// which are the familiar Scrabble ones (the game's own FAQ: B=3,
-// A=E=I=R=1). Answers are ranked by that score.
+// The picture is grabbed with streamlink + ffmpeg and read with
+// tesseract, the same tools the other bots use; the host service
+// needs permission to run them, and when anything is missing the
+// private page says so instead of failing silently. Which channel
+// it watches is picked on the private page itself.
 
 import { BASE_URL, WORDS_OFF } from "./config.ts";
 import { getKv, listChannels, setKv } from "./db.ts";
-import { esc, page } from "./pages.ts";
+import { esc, messagePage, page } from "./pages.ts";
 
 const STREAMLINK = Deno.env.get("STREAMLINK_PATH") || "streamlink";
 const FFMPEG = Deno.env.get("FFMPEG_PATH") || "ffmpeg";
@@ -381,7 +373,7 @@ export async function getWordsToken(): Promise<string> {
 }
 
 export function wordsUrl(token: string): string {
-  return `${BASE_URL}/words/${token}`;
+  return `${BASE_URL}/w/${token}`;
 }
 
 async function enabledChannelStates(): Promise<(WordsState & { id: string })[]> {
@@ -396,13 +388,13 @@ async function enabledChannelStates(): Promise<(WordsState & { id: string })[]> 
   return [{ id, ...state }];
 }
 
-/** Serves /words/<token> and its data/frame/form endpoints. Returns
+/** Serves /w/<token> and its data/frame/form endpoints. Returns
  * null when the path isn't this module's. */
 export async function wordsRoute(req: Request, url: URL, path: string): Promise<Response | null> {
-  if (!path.startsWith("/words/")) return null;
+  if (!path.startsWith("/w/")) return null;
   const parts = path.split("/").filter(Boolean); // words, token, rest?
   const token = await getWordsToken();
-  if (parts[1] !== token) return new Response("Not found", { status: 404 });
+  if (parts[1] !== token) return messagePage("Not found", "Nothing here.", 404);
   const sub = parts[2] ?? "";
 
   if (sub === "data") {
@@ -450,13 +442,13 @@ export async function wordsRoute(req: Request, url: URL, path: string): Promise<
     await setKv(`words_manual:${id}`, "");
     return new Response(null, { status: 303, headers: { Location: wordsUrl(token) } });
   }
-  if (sub !== "") return new Response("Not found", { status: 404 });
+  if (sub !== "") return messagePage("Not found", "Nothing here.", 404);
 
   const channels = await listChannels();
   const watchedId = await getWatchedChannelId();
   const watched = channels.find((c) => c.broadcaster_id === watchedId);
   return page(`
-<div class="kicker">PRIVATE</div><h1>🔤 Words on Stream helper</h1>
+<div class="kicker">PRIVATE</div><h1>Private page</h1>
 <p class="muted">Only this link can see this page. Nothing here is ever posted in chat.</p>
 <div id="out"><p class="muted">Loading…</p></div>
 <div class="card"><h3>Watching</h3>
@@ -480,7 +472,7 @@ async function load() {
   const out = document.getElementById("out");
   let d;
   try {
-    const r = await fetch("/words/" + TOKEN + "/data", { cache: "no-store" });
+    const r = await fetch("/w/" + TOKEN + "/data", { cache: "no-store" });
     d = await r.json();
   } catch (e) {
     if (!loadedOnce) out.innerHTML = '<div class="card">Could not load — retrying every few seconds…</div>';
@@ -496,12 +488,12 @@ async function load() {
     (c.letters ? '<p style="font-size:28px;letter-spacing:.35em">' + esc(c.letters) + '</p>' : '<p class="muted">No letters yet.</p>') +
     '<p class="muted">' + c.total + ' words fit' + (c.words.length < c.total ? ' (best ' + c.words.length + ' shown)' : '') +
     (c.updatedAt ? ' — updated ' + new Date(c.updatedAt).toLocaleTimeString() : '') + '</p>' +
-    '<p><img src="/words/" + TOKEN + "/frame?ch=' + encodeURIComponent(c.id) + '&t=' + d.at + '" style="max-width:100%;border-radius:8px" onerror="this.parentElement.style.display=\'none\'"></p>' +
+    '<p><img src="/w/" + TOKEN + "/frame?ch=' + encodeURIComponent(c.id) + '&t=' + d.at + '" style="max-width:100%;border-radius:8px" onerror="this.parentElement.style.display=\'none\'"></p>' +
     lens.map((n) => '<p><b>' + n + ' letters</b><br>' + groups[n].map((w) => esc(w.word) + ' <span class="muted">' + w.score + '</span>').join(' — ') + '</p>').join("") +
     '</div>';
   }).join("");
 }
 load();
 setInterval(load, 5000);
-</script>`, { title: "Words helper (private)" });
+</script>`, { title: "Private" });
 }

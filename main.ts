@@ -70,8 +70,8 @@ export default async function handler(req: Request): Promise<Response> {
   // ---- EventSub ----
   if (path === "/eventsub/callback" && req.method === "POST") return await eventSub(req);
 
-  // ---- Words on Stream helper (private page; never posts) ----
-  if (path.startsWith("/words/")) {
+  // ---- Private page (operator only; never posts) ----
+  if (path.startsWith("/w/")) {
     const r = await wordsRoute(req, url, path);
     if (r) return r;
   }
@@ -243,7 +243,7 @@ async function myAction(req: Request): Promise<Response> {
   else if (action === "words_on" || action === "words_off") {
     // The operator's quiet helper: only they can switch it, so it
     // never appears as an option on a streamer's own page.
-    if (!isAdmin(user)) return messagePage("Not allowed", "Only the operator can switch the word helper.", 403);
+    if (!isAdmin(user)) return messagePage("Not allowed", "Only the operator can switch the helper.", 403);
     if (action === "words_on") await setKv("words_channel", id);
     else if ((await getKv("words_channel")) === id) await setKv("words_channel", "");
   }

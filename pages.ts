@@ -107,13 +107,13 @@ function channelCard(m: Manageable, action: string) {
 <span class="pill ${c.announce ? "on" : ""}">${c.announce ? "Announcements" : "Plain chat"}</span>
 <span class="pill ${c.refresh_token ? "on" : "off"}">${c.refresh_token ? "Ad schedule connected" : "Ad schedule not connected"}</span>
 <span class="pill ${c.ads_subscribed ? "on" : "off"}">${c.ads_subscribed ? "Ad events on" : "Ad events missing"}</span>
-${m.wordsOn !== undefined ? `<span class="pill ${m.wordsOn ? "on" : ""}">Word helper ${m.wordsOn ? "on" : "off"}</span>` : ""}
+${m.wordsOn !== undefined ? `<span class="pill ${m.wordsOn ? "on" : ""}">Helper ${m.wordsOn ? "on" : "off"}</span>` : ""}
 </p>
 <p class="row">
 ${c.enabled ? btn("off", "Turn off") : btn("on", "Turn on", "gold")}
 ${c.announce ? btn("announce_off", "Use plain chat") : btn("announce_on", "Use announcements")}
 ${m.canRemove ? btn("remove", "Remove from channel", "danger", `Remove ${crierName()} from ${c.login} and delete its data?`) : ""}
-${m.wordsOn !== undefined ? (m.wordsOn ? btn("words_off", "Word helper off") : btn("words_on", "Word helper on")) : ""}
+${m.wordsOn !== undefined ? (m.wordsOn ? btn("words_off", "Helper off") : btn("words_on", "Helper on")) : ""}
 </p>
 ${!c.refresh_token ? `<p class="muted">The streamer needs to <a href="${BASE_URL}/auth/start">add the bot again</a> so it can read the ad schedule.</p>` : ""}
 </div>`;
@@ -163,12 +163,9 @@ ${o.botOn ? act("bot_off", "Pause everywhere") : act("bot_on", "Resume everywher
 ${act("resync", "Re-subscribe all channels")}</p>
 <p class="muted">Connect the bot while logged in to Twitch <i>as the bot account</i>.</p>
 </div>
-${o.wordsLink ? `<div class="card"><h3>🔤 Words on Stream helper</h3>
-<p>Quietly reads the letters on an enabled channel's stream and keeps the best words on a private page.
-It never posts in chat. The page is the secret: anyone with the link can open it.</p>
-<p><a class="btn gold" href="${esc(o.wordsLink)}">Open the private words page</a></p>
-<p class="muted">Switch it on per channel below (Word helper). It needs streamlink, ffmpeg and tesseract
-on the laptop, and the service's permission to run them.</p></div>` : ""}
+${o.wordsLink ? `<div class="card"><h3>🔒 Private</h3>
+<p><a class="btn gold" href="${esc(o.wordsLink)}">Open the private page</a></p>
+<p class="muted">Switched on per channel below.</p></div>` : ""}
 ${o.channels.map((c) => channelCard({ ch: c, canRemove: true, wordsOn: o.wordsStates?.[c.broadcaster_id] }, `${BASE_URL}/my/action`)).join("")}`, { title: `${crierName()} dashboard` });
 }
 

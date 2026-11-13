@@ -1,4 +1,4 @@
-// The Words on Stream helper: solver, OCR token picking, the token
+// The private helper: solver, OCR token picking, the token
 // route, and the tick's offline/tool-missing behaviour. No network
 // and no chat anywhere: DB is in memory, and the "channel" is fake.
 //   deno task test
@@ -11,7 +11,7 @@ const db = await import("../db.ts");
 await db.ensureTables();
 
 Deno.test("word scores match the game's own example", () => {
-  // The Words on Stream FAQ: BARRIER scores 9 (R=1, I=1, E=1, A=1, B=3).
+  // The game's own FAQ example: BARRIER scores 9 (R=1, I=1, E=1, A=1, B=3).
   assertEquals(words.wordScore("barrier"), 9);
   assertEquals(words.wordScore("easily"), 9); // e1 a1 s1 i1 l1 y4
 });
@@ -62,14 +62,14 @@ Deno.test("pickRack reads rows top to bottom", () => {
 });
 
 Deno.test("the private page 404s without the token", async () => {
-  const url = new URL("https://crier.tavernworks.dev/words/nope");
-  const res = await words.wordsRoute(new Request(url), url, "/words/nope");
+  const url = new URL("https://crier.tavernworks.dev/w/nope");
+  const res = await words.wordsRoute(new Request(url), url, "/w/nope");
   assertEquals(res?.status, 404);
   const token = await words.getWordsToken();
   assert(/^[0-9a-f]{32}$/.test(token), "token is 32 hex chars");
   assertEquals(await words.getWordsToken(), token, "token is stable");
-  const okUrl = new URL(`https://crier.tavernworks.dev/words/${token}/data`);
-  const ok = await words.wordsRoute(new Request(okUrl), okUrl, `/words/${token}/data`);
+  const okUrl = new URL(`https://crier.tavernworks.dev/w/${token}/data`);
+  const ok = await words.wordsRoute(new Request(okUrl), okUrl, `/w/${token}/data`);
   assertEquals(ok?.status, 200);
   const data = await ok!.json();
   assertEquals(data.channels, []);
@@ -83,12 +83,12 @@ Deno.test("the page's channel picker sets the watched channel", async () => {
   const token = await words.getWordsToken();
   const form = new FormData();
   form.set("channel", "4242");
-  const url = new URL(`https://crier.tavernworks.dev/words/${token}/watch`);
-  const res = await words.wordsRoute(new Request(url, { method: "POST", body: form }), url, `/words/${token}/watch`);
+  const url = new URL(`https://crier.tavernworks.dev/w/${token}/watch`);
+  const res = await words.wordsRoute(new Request(url, { method: "POST", body: form }), url, `/w/${token}/watch`);
   assertEquals(res?.status, 303);
   assertEquals(await db.getKv("words_channel"), "4242");
-  const dataUrl = new URL(`https://crier.tavernworks.dev/words/${token}/data`);
-  const data = await (await words.wordsRoute(new Request(dataUrl), dataUrl, `/words/${token}/data`))!.json();
+  const dataUrl = new URL(`https://crier.tavernworks.dev/w/${token}/data`);
+  const data = await (await words.wordsRoute(new Request(dataUrl), dataUrl, `/w/${token}/data`))!.json();
   assertEquals(data.channels.length, 1);
   assertEquals(data.channels[0].login, "fakechannel");
 });
