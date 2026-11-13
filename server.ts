@@ -8,11 +8,12 @@
 //   deno task start    (the systemd unit runs the same thing)
 
 import handler from "./main.ts";
-import { BASE_URL, CLIENT_ID, EVENTSUB_SECRET, LIVE_SYNC_MS, TICK_MS } from "./config.ts";
+import { BASE_URL, CLIENT_ID, EVENTSUB_SECRET, LIVE_SYNC_MS, TICK_MS, WORDS_GRAB_MS } from "./config.ts";
 import { ensureTables, listChannels, setLive } from "./db.ts";
 import { forgetSchedule, tick } from "./ads.ts";
 import { ensureOrrery, refreshOrrery } from "./orrery.ts";
 import { fetchLive } from "./twitch.ts";
+import { tickWords } from "./words.ts";
 
 const PORT = Number(Deno.env.get("PORT") || 8804);
 const HOST = Deno.env.get("HOST") || "127.0.0.1";
@@ -57,6 +58,7 @@ if (!CLIENT_ID || !EVENTSUB_SECRET) console.warn("TWITCH_CLIENT_ID / EVENTSUB_SE
 every("orrery", 60_000, 30_000, refreshOrrery);
 every("live sync", LIVE_SYNC_MS, 3_000, syncLive);
 every("ad tick", TICK_MS, 8_000, tick);
+every("words", WORDS_GRAB_MS, 20_000, tickWords);
 
 Deno.serve({ port: PORT, hostname: HOST }, (req) => {
   // The tunnel hands requests over as plain http://127.0.0.1; give the
