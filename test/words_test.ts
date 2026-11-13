@@ -146,3 +146,17 @@ Deno.test("the page's source form saves, keeps and clears the link", async () =>
   await post("");
   assertEquals((await db.getKv("words_source")) ?? "", "");
 });
+
+Deno.test("the private page's inline script actually parses", async () => {
+  // Regression: an unescaped quote in the frame <img> onerror once
+  // killed the whole script, leaving the page stuck on "Loading..."
+  // forever while the HTML and data routes looked perfectly fine.
+  const token = await words.getWordsToken();
+  const url = new URL(`https://crier.tavernworks.dev/w/${token}`);
+  const res = await words.wordsRoute(new Request(url), url, `/w/${token}`);
+  assertEquals(res?.status, 200);
+  const html = await res!.text();
+  const m = html.match(/<script>([\s\S]*)<\/script>/);
+  assert(m, "page carries an inline script");
+  new Function(m![1]); // parses the body; a SyntaxError fails the test
+});

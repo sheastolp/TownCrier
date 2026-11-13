@@ -621,7 +621,7 @@ async function load() {
     (c.lastRead && c.lastRead !== c.letters ? '<p class="muted">Last read: ' + esc(c.lastRead) + '</p>' : '') +
     '<p class="muted">' + c.total + ' words fit' + (c.words.length < c.total ? ' (best ' + c.words.length + ' shown)' : '') +
     (c.updatedAt ? ' — updated ' + new Date(c.updatedAt).toLocaleTimeString() : '') + '</p>' +
-    '<p><img src="/w/" + TOKEN + "/frame?ch=' + encodeURIComponent(c.id) + '&t=' + d.at + '" style="max-width:100%;border-radius:8px" onerror="this.parentElement.style.display=\'none\'"></p>' +
+    '<p><img src="/w/" + TOKEN + "/frame?ch=' + encodeURIComponent(c.id) + '&t=' + d.at + '" style="max-width:100%;border-radius:8px" onerror="this.remove()"></p>' +
     lens.map((n) => '<p><b>' + n + ' letters</b><br>' + groups[n].map((w) => esc(w.word) + ' <span class="muted">' + w.score + '</span>').join(' — ') + '</p>').join("") +
     '</div>';
   }).join("");
