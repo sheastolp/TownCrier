@@ -75,12 +75,30 @@ Deno.test("the private page 404s without the token", async () => {
   assertEquals(data.channels, []);
 });
 
+Deno.test("the page's channel picker sets the watched channel", async () => {
+  await db.upsertChannel({
+    id: "4242", login: "fakechannel", displayName: "Fake",
+    accessToken: "x", refreshToken: "y", expiresIn: 3600, scope: "",
+  });
+  const token = await words.getWordsToken();
+  const form = new FormData();
+  form.set("channel", "4242");
+  const url = new URL(`https://crier.tavernworks.dev/words/${token}/watch`);
+  const res = await words.wordsRoute(new Request(url, { method: "POST", body: form }), url, `/words/${token}/watch`);
+  assertEquals(res?.status, 303);
+  assertEquals(await db.getKv("words_channel"), "4242");
+  const dataUrl = new URL(`https://crier.tavernworks.dev/words/${token}/data`);
+  const data = await (await words.wordsRoute(new Request(dataUrl), dataUrl, `/words/${token}/data`))!.json();
+  assertEquals(data.channels.length, 1);
+  assertEquals(data.channels[0].login, "fakechannel");
+});
+
 Deno.test("tick: offline channel noted, live channel reports missing tools", async () => {
   await db.upsertChannel({
     id: "4242", login: "fakechannel", displayName: "Fake",
     accessToken: "x", refreshToken: "y", expiresIn: 3600, scope: "",
   });
-  await db.setKv("words:4242", "1");
+  await db.setKv("words_channel", "4242");
   await words.tickWords();
   let state = JSON.parse((await db.getKv("words_state:4242"))!);
   assertEquals(state.status, "channel offline");

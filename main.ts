@@ -244,7 +244,8 @@ async function myAction(req: Request): Promise<Response> {
     // The operator's quiet helper: only they can switch it, so it
     // never appears as an option on a streamer's own page.
     if (!isAdmin(user)) return messagePage("Not allowed", "Only the operator can switch the word helper.", 403);
-    await setKv(`words:${id}`, action === "words_on" ? "1" : "0");
+    if (action === "words_on") await setKv("words_channel", id);
+    else if ((await getKv("words_channel")) === id) await setKv("words_channel", "");
   }
   else if (action === "remove") {
     if (!(user!.id === id || isAdmin(user))) return messagePage("Not allowed", "Only the streamer can remove the bot.", 403);
@@ -269,8 +270,9 @@ async function dashboardRoute(req: Request, url: URL): Promise<Response> {
   if (!isAdmin(user)) return messagePage("Operators only", `Streamers can manage their channel at <a href="${BASE_URL}/my">/my</a>.`, 403);
   const done = url.searchParams.get("done");
   const channels = await listChannels();
+  const watchedChannel = await getKv("words_channel");
   const wordsStates: Record<string, boolean> = {};
-  for (const ch of channels) wordsStates[ch.broadcaster_id] = (await getKv(`words:${ch.broadcaster_id}`)) === "1";
+  for (const ch of channels) wordsStates[ch.broadcaster_id] = ch.broadcaster_id === watchedChannel;
   return dashboardPage({
     admin: user.login,
     botLogin: await getKv("bot_login"),
