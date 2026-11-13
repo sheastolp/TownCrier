@@ -1,7 +1,7 @@
 {
   "lock": false,
   "tasks": {
-    "start": "deno run --allow-net --allow-env --allow-read --allow-write --allow-run=streamlink,ffmpeg,tesseract server.ts",
+    "start": "deno run --allow-net --allow-env --allow-read --allow-write --allow-run=streamlink,ffmpeg,tesseract,google-chrome-stable,google-chrome,chromium,chromium-browser,firefox server.ts",
     "check": "deno check server.ts",
     "test": "deno test --allow-env --allow-read --allow-write test/"
   },

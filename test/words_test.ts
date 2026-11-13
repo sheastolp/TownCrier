@@ -109,3 +109,40 @@ Deno.test("tick: offline channel noted, live channel reports missing tools", asy
   // rather than failing silently.
   assertStringIncludes(state.status, "isn't installed on the host");
 });
+
+Deno.test("racks match as letter sets, whatever order they scramble into", () => {
+  // The round the operator's room was showing while this was
+  // written: the same seven tiles in three different orders.
+  assertEquals(words.canonicalRack("VERSESR"), "EERRSSV");
+  assert(words.sameRack("EERSRSV", "VERSESR"));
+  assert(words.sameRack("RSEEVRS", "EERRSSV"));
+  assert(!words.sameRack("EERSRSV", "EERSRSA"));
+  assert(!words.sameRack("EERSRSV", ""));
+  const solved = words.solveLetters("VERSESR");
+  return solved.then((s) => assert(s.map((w) => w.word).includes("servers")));
+});
+
+Deno.test("source links are restricted to the game's own host", () => {
+  assert(words.isAllowedSourceUrl("https://wos.gg/r/00000000-1111-2222-3333-444444444444"));
+  assert(words.isAllowedSourceUrl("https://p.wos.gg/room"));
+  assert(!words.isAllowedSourceUrl("https://example.com/r/abc"));
+  assert(!words.isAllowedSourceUrl("http://wos.gg/r/abc"));
+  assert(!words.isAllowedSourceUrl("not a url"));
+});
+
+Deno.test("the page's source form saves, keeps and clears the link", async () => {
+  const token = await words.getWordsToken();
+  const post = async (url: string) => {
+    const form = new FormData();
+    form.set("url", url);
+    const u = new URL(`https://crier.tavernworks.dev/w/${token}/source`);
+    const res = await words.wordsRoute(new Request(u, { method: "POST", body: form }), u, `/w/${token}/source`);
+    assertEquals(res?.status, 303);
+  };
+  await post("https://wos.gg/r/abc-123");
+  assertEquals(await db.getKv("words_source"), "https://wos.gg/r/abc-123");
+  await post("https://example.com/evil");
+  assertEquals(await db.getKv("words_source"), "https://wos.gg/r/abc-123", "a foreign link is not saved");
+  await post("");
+  assertEquals((await db.getKv("words_source")) ?? "", "");
+});
